@@ -131,6 +131,7 @@ abstract class CircuitsForDatabase(val db: Database, lf: LearningFormula) {
 
   /**
    * Returns dlog(e^{w * n})/dw for this formula and database
+   * INFO: This is the gradient of the log-likelihood
    */
   def gradientLogLikelihood: Double = {
     val expectedNbGroundings = expectedNumGroundings()

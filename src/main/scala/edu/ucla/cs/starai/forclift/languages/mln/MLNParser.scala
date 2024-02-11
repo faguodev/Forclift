@@ -120,7 +120,7 @@ class MLNParser extends JavaTokenParsers with ModelParser {
   import FormulaSyntaxMLN._
 
   // TODO remove learning modus flag in parser and have a separate function for parsing model structures
-  var isLearnModus = false
+  var isLearnModus = true
   def setLearnModus(set: Boolean): Unit = { isLearnModus = set }
   var isDatabase = false
 
@@ -487,7 +487,7 @@ class MLNParser extends JavaTokenParsers with ModelParser {
     | failure("Expected a weighted formula."))
 
   /**
-   * Parse hard or to be learned formulas.
+   * Parse hard or to be learned formulas. // Get's called
    *
    *  - A hard formula is a formula ending with a full stop.
    *  - A learned formula is a formua without full stop or weight.
@@ -501,6 +501,7 @@ class MLNParser extends JavaTokenParsers with ModelParser {
         }
         dot match {
           case None => {
+            println("isLearnModus: " + isLearnModus)
             printd("Parsed learn formula: " + f)
             if (isLearnModus) {
               WeightedFormula(f, 0, false, con).standardizeApart

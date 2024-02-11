@@ -136,7 +136,7 @@ class InputCLI(argumentParser: ArgotParser, debugCLI: DebugCLI) {
   
   
   /**
-   * Read in the model using command line flags
+   * Read in the model using command line flags (get's called)
    */
   lazy val (model,parser): (StatRelModel,ModelParser) = {
 
