@@ -42,6 +42,7 @@ class LiftedLearning(
   normalizepll: Boolean = false,
   mu: Double = 0.0, // alchemy default 0
   sigma: Double = 100.0, // alchemy default 100
+  lambda: Double = 1, // Add lambda for L1 regularization
   compiler: Compiler = Compiler.default,
   optimizer: FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] 
 		  = new LBFGS[DenseVector[Double]](tolerance = 1E-15),
@@ -308,6 +309,7 @@ class LiftedLearning(
     }
 
     /** If argument is null, an array will be allocated for you and returned. */
+    // INFO: This is where the gradient is calculated
     def calculateGradient(): DenseVector[Double] = {
       numGradientComputations+=1
       reevaluateZ()
@@ -335,8 +337,18 @@ class LiftedLearning(
 	        gradientLogPriorDensity(i)
 	      }
 	      if(verbose) println(s"Derivative of logprior is $derivativeLogPriorDensity towards weight of $res")
-	      val derivativeLogRegularizedLikelihood = totalDerivativeLikelihood + derivativeLogPriorDensity
-	      if(verbose) println(s"Derivative of regularized likelihood is $derivativeLogRegularizedLikelihood towards weight of $res")
+        
+        //val derivativeLogRegularizedLikelihood = totalDerivativeLikelihood + derivativeLogPriorDensity
+        
+        val derivativeLogRegularizedLikelihood = if (learnableClauses(i).res.arity > 1) {
+            // Apply L1 regularization
+            totalDerivativeLikelihood - lambda * math.signum(learnableClauses(i).logWeight)
+        } else {
+            totalDerivativeLikelihood
+        }
+
+	      
+        if(verbose) println(s"Derivative of regularized likelihood is $derivativeLogRegularizedLikelihood towards weight of $res")
 	      weights(i) = derivativeLogRegularizedLikelihood
       }
       if(verbose) println
