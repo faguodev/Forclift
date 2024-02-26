@@ -118,6 +118,13 @@ class LearningCLI(
     "Step size for the stepped search strategy. The default step size is 0.01.")
   def slStepSize = slStepSizeFlag.value.getOrElse(0.01)
 
+  val lambdaFlag = argumentParser.option[Double](
+    List("lambda"),
+    "n",
+    "Regularization parameter lambda for weight learning. Default is 1.0.")
+  def lambda = lambdaFlag.value.getOrElse(1.0)
+
+
   def runLearning() {
     if (inputCLI.inputFileFormat != FileFormat.MLN) {
       argumentParser.usage("Learning only supports MLN input structures.")
@@ -145,7 +152,8 @@ class LearningCLI(
       testdbMlns = inputCLI.testDbMlns,
       doLL = doDBLikelihood,
       doPLL = doDBPseudoLikelihood,
-      skolemize = true) //TODO what does it even mean to turn off Skolemization for learning?
+      skolemize = true,
+      lambda = lambda) //TODO what does it even mean to turn off Skolemization for learning?
 
     // Write learned MLN to file
     val learnedMLNstr = learnedMLN.toStringFull

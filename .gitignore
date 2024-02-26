@@ -33,3 +33,5 @@ project/plugins/project/
 .vscode
 .metals
 .scala-build
+
+models/learning/synth
