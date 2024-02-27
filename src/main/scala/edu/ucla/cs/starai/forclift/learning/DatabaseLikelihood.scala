@@ -53,6 +53,9 @@ case class DatabaseLikelihood(
     gradientLogLikelihood(weightId) / db.vocabularySize
   }
 
+  def getTrueGroundings(weightId: Int): GInt = {
+    formulaCircuits(weightId).nbTrueGroundings
+  }
 }
 
 abstract class CircuitsForDatabase(val db: Database, lf: LearningFormula) {

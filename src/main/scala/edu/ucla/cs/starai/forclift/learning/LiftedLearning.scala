@@ -45,10 +45,11 @@ class LiftedLearning(
   lambda: Double = 1, // Add lambda for L1 regularization
   compiler: Compiler = Compiler.default,
   optimizer: FirstOrderMinimizer[DenseVector[Double], DiffFunction[DenseVector[Double]]] 
-		  = new LBFGS[DenseVector[Double]](tolerance = 1E-15),
+		  = new LBFGS[DenseVector[Double]](tolerance = 1E-500),
   verbose: Boolean = false,
   testdbMLNs: Seq[MLN] = Seq(),
-  skolemize: Boolean = true) {
+  skolemize: Boolean = true,
+  targetdbMLNs: Seq[MLN] = Seq()) {
   
   // learning messes with the constants in the domain: 
   // it cannot run when the domain already has anonymous constants
@@ -72,6 +73,10 @@ class LiftedLearning(
   val dbs: Databases = Databases.fromMLNs(structure2,
     (traindbMLNs ++ testdbMLNs).toIndexedSeq,
     testdbMLNs.length)
+
+  val targetDbs: Databases = Databases.fromMLNs(structure2,
+    targetdbMLNs.toIndexedSeq,
+    0)
 
   // Check whether there are empty domains. This is not allowed.
   for (db <- dbs.dbs) {
@@ -266,7 +271,7 @@ class LiftedLearning(
         val gradient = -calculateGradient;
         lastWeights = weights.copy;
         lastResult = (value, gradient);
-        println(lastResult)
+        if(verbose) println(lastResult)
         return lastResult;
       }
     }
@@ -317,7 +322,10 @@ class LiftedLearning(
       reevaluateQueryCircuits()
       
       if(verbose) println("Computing gradient")
-      	
+
+      //println(targetDbs.dbs.head.domainSizes)
+      //println(dbs.dbs.head.domainSizes)
+      
       val weights = new Array[Double](numOptimizableParameters)
       for (i <- 0 until numOptimizableParameters) {
 	        val res = learnableClauses(i).res
@@ -338,15 +346,22 @@ class LiftedLearning(
 	        gradientLogPriorDensity(i)
 	      }
 	      if(verbose) println(s"Derivative of logprior is $derivativeLogPriorDensity towards weight of $res")
+
+        val totalNumberOfTrueGroundings = trainDatabaseLikelihoods.map{ dbLh =>
+          dbLh.getTrueGroundings(i)
+        }.reduce(_ + _)
+
+        // variables in clause
+
         
         //val derivativeLogRegularizedLikelihood = totalDerivativeLikelihood + derivativeLogPriorDensity
         
         val derivativeLogRegularizedLikelihood = if (learnableClauses(i).res.arity > 1) {
             // Apply L1 regularization
-            println(s"Regularizing $res")
-            totalDerivativeLikelihood - lambda * math.signum(learnableClauses(i).logWeight)
+            if(verbose) println(s"Regularizing $res")
+            totalDerivativeLikelihood - lambda * learnableClauses(i).logWeight
         } else {
-            println(s"Not regularizing $res")
+            if(verbose) println(s"Not regularizing $res")
             totalDerivativeLikelihood
         }
 

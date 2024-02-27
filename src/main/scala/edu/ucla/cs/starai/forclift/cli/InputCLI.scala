@@ -122,6 +122,18 @@ class InputCLI(argumentParser: ArgotParser, debugCLI: DebugCLI) {
     }
   def trainDbFiles: Seq[File] = trainDbFilesFlag.value
 
+  val targetDbFilesFlag = argumentParser.multiOption[File](
+  List("target"),
+  "filename",
+  "Database file with data for targeting.") {
+    (s, opt) =>
+      val file = new File(s)
+      if (!file.exists)
+        argumentParser.usage("Data file \"" + s + "\" does not exist.")
+      file
+  }
+  def targetDbFiles: Seq[File] = targetDbFilesFlag.value
+
   val testDbFilesFlag = argumentParser.multiOption[File](
     List("test"),
     "filename",
@@ -230,7 +242,7 @@ class InputCLI(argumentParser: ArgotParser, debugCLI: DebugCLI) {
     (mln,parser)
   }
   
-  lazy val (trainDbMlns, testDbMlns) = inputFileFormat match{
+  lazy val (trainDbMlns, testDbMlns, targetDbMlns) = inputFileFormat match{
       case FileFormat.MLN => parseMLNDatabases()
       case _ => throw new UnsupportedOperationException(s"Could not find parser for $inputFileFormat databases (for learning)")
     }
@@ -273,7 +285,25 @@ class InputCLI(argumentParser: ArgotParser, debugCLI: DebugCLI) {
           println
         }
       }
-      (trainDbMlns, testDbMlns)
+    val targetDbMlns = targetDbFiles.map { file =>
+      val targetFile = Source.fromFile(file)
+      try {
+        mlnStructParser.parseDB(targetFile.mkString)
+      } catch {
+        case e: Exception => throw new Exception(s" something wrong with file $file")
+      }
+      finally {
+        targetFile.close()
+      }
+    }
+    println(targetDbMlns)
+      if (debugCLI.verbose) {
+        for (dbMln <- targetDbMlns) {
+          println("Parsed target db with domains:")
+          println(dbMln.domainSizes)
+          println
+        }
+      }
+      (trainDbMlns, testDbMlns, targetDbMlns)
   }
-    
 }

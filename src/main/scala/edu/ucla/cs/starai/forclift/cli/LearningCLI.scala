@@ -144,7 +144,8 @@ class LearningCLI(
     if (inputCLI.trainDbFiles.isEmpty) {
       argumentParser.usage("No training database files given for weight learning.")
     }
-    val learnedMLN = WeightLearning.learnWeights(
+    val learnedMLN = if (inputCLI.targetDbMlns.isEmpty) {
+      WeightLearning.learnWeights(
       inputCLI.modelStructure.asInstanceOf[MLN],
       inputCLI.trainDbMlns,
       verbose = debugCLI.verbose,
@@ -153,7 +154,20 @@ class LearningCLI(
       doLL = doDBLikelihood,
       doPLL = doDBPseudoLikelihood,
       skolemize = true,
-      lambda = lambda) //TODO what does it even mean to turn off Skolemization for learning?
+      lambda = lambda) //TODO what does it even mean to turn off Skolemization for learning
+    } else {
+      WeightLearning.learnWeights(
+      inputCLI.modelStructure.asInstanceOf[MLN],
+      inputCLI.trainDbMlns,
+      verbose = debugCLI.verbose,
+      normalizeLH = doNormalizeLH,
+      testdbMlns = inputCLI.testDbMlns,
+      doLL = doDBLikelihood,
+      doPLL = doDBPseudoLikelihood,
+      skolemize = true,
+      lambda = lambda,
+      targetDbMlns = inputCLI.targetDbMlns)
+    }
 
     // Write learned MLN to file
     val learnedMLNstr = learnedMLN.toStringFull

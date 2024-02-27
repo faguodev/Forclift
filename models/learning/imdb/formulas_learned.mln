@@ -1,0 +1,18 @@
+
+actor(person)
+genre(person,type)
+movie(film,person)
+director(person)
+male(person)
+workedUnder(person,person)
+
+-2.4785599598812307 workedUnder(x,y)
+0.04151077475316192 male(x)
+-0.16577402038970185 movie(x,y)
+0.009627235366634127 genre(x,y)
+-0.01280616349282017 actor(x)
+0.012806163492789232 director(x)
+1.6619693001327034 (!movie(x,y) v !movie(z,y))
+0.3500628421206061 (!workedUnder(x,y) v !male(y))
+1.6535111064753216 (movie(x,y) v !movie(z,y))
+7.88185215176755 (((workedUnder(x,y) v director(y)) v genre(y,z)) v !actor(y))

@@ -101,7 +101,8 @@ object WeightLearning {
     doPLL: Boolean = false,
     testdbMlns: Seq[MLN] = Seq(),
     skolemize: Boolean = true,
-    lambda: Double = 1.0): MLN = {
+    lambda: Double = 1.0,
+    targetDbMlns: Seq[MLN] = Seq()): MLN = {
     
 
     val startLearning = System.currentTimeMillis
@@ -113,7 +114,8 @@ object WeightLearning {
       normalizeLH = normalizeLH,
       testdbMLNs = testdbMlns,
       skolemize = skolemize,
-      lambda = lambda)
+      lambda = lambda,
+      targetdbMLNs = targetDbMlns)
     if (verbose) println("Start learning")
     val learnedMLN = learner.learnParameters()
 
