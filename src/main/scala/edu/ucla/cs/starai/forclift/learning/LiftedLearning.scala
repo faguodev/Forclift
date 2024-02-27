@@ -266,6 +266,7 @@ class LiftedLearning(
         val gradient = -calculateGradient;
         lastWeights = weights.copy;
         lastResult = (value, gradient);
+        println(lastResult)
         return lastResult;
       }
     }
@@ -320,7 +321,7 @@ class LiftedLearning(
       val weights = new Array[Double](numOptimizableParameters)
       for (i <- 0 until numOptimizableParameters) {
 	        val res = learnableClauses(i).res
-	      val totalDerivativeLikelihood = trainDatabaseLikelihoods.map{ dbLh =>
+        val totalDerivativeLikelihood = trainDatabaseLikelihoods.map{ dbLh =>
 	        val derivative = if(normalizeLH){
 	          dbLh.gradientPerVariableLogLikelihood(i)
 	        }else{
@@ -342,12 +343,13 @@ class LiftedLearning(
         
         val derivativeLogRegularizedLikelihood = if (learnableClauses(i).res.arity > 1) {
             // Apply L1 regularization
+            println(s"Regularizing $res")
             totalDerivativeLikelihood - lambda * math.signum(learnableClauses(i).logWeight)
         } else {
+            println(s"Not regularizing $res")
             totalDerivativeLikelihood
         }
 
-	      
         if(verbose) println(s"Derivative of regularized likelihood is $derivativeLogRegularizedLikelihood towards weight of $res")
 	      weights(i) = derivativeLogRegularizedLikelihood
       }
@@ -361,7 +363,8 @@ class LiftedLearning(
   
   def learnParameters(): (MLN, Double) = {
     numGradientComputations = 0
-    val learnedParameters = optimizer.minimize(logLikelihoodFunction, DenseVector.zeros(numOptimizableParameters))
+    val learnedParameters = (new SpectralProjectedGradient[DenseVector[Double], DiffFunction[DenseVector[Double]]](maxIter=100000, tolerance=1E-500)).minimize(logLikelihoodFunction, DenseVector.zeros(numOptimizableParameters))
+    //val learnedParameters = optimizer.minimize(logLikelihoodFunction, DenseVector.zeros(numOptimizableParameters))
     val ll = logLikelihoodFunction.calculate(learnedParameters)._1
     if(verbose) println("Final weight vector: " + learnedParameters);
     if(verbose) println("Final loglikelihood: " + ll);
