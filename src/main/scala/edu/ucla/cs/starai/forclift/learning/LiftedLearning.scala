@@ -349,26 +349,21 @@ class LiftedLearning(
         }.reduce(_ + _)
 
         // print vproduct of domain sizes
-        println(learnableClauses(i).res)
 
         val density_factor = learnableClauses(i).res.domains.map(_.size(dbs.dbs.head.domainSizes, Set.empty)).product
-        println("density factor: " + density_factor)
         val targetdb_density_factor = learnableClauses(i).res.domains.map(_.size(targetDbs.dbs.head.domainSizes, Set.empty)).product
-        println("targetdb_density_factor: " + targetdb_density_factor)
         val difference_density_factor = learnableClauses(i).res.domains.map(domainElement => 
           domainElement.size(targetDbs.dbs.head.domainSizes, Set.empty) - 
           domainElement.size(dbs.dbs.head.domainSizes, Set.empty)
         ).product
-        println("difference_density_factor: " + difference_density_factor)
         val cross_term = targetdb_density_factor - density_factor - difference_density_factor
-        println("cross_term: " + cross_term)
 
         //val derivativeLogRegularizedLikelihood = totalDerivativeLikelihood + derivativeLogPriorDensity
         
         val derivativeLogRegularizedLikelihood = if (learnableClauses(i).res.arity > 1) {
             // Apply L1 regularization
-            if(verbose) println(s"Regularizing $res")
-            totalDerivativeLikelihood - lambda * learnableClauses(i).logWeight
+            if(verbose) println(s"Regularizing $res with factor $lambda, signum ${math.signum(learnableClauses(i).logWeight)}, cross_term $cross_term, totalNumberOfTrueGroundings $totalNumberOfTrueGroundings, density_factor $density_factor, targetdb_density_factor $targetdb_density_factor, difference_density_factor $difference_density_factor")
+            totalDerivativeLikelihood - lambda * math.signum(learnableClauses(i).logWeight) * (totalNumberOfTrueGroundings.toFloat / density_factor) * cross_term
         } else {
             if(verbose) println(s"Not regularizing $res")
             totalDerivativeLikelihood
